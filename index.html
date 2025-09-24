@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Relatório Interativo das Cidades de Minas Gerais</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #fff8e1;
+      color: #3a3a3a;
+    }
+    h1, h2 {
+      color: #b31e22;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #b31e22;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #b31e22;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #fcde9c;
+    }
+    #searchInput {
+      width: 100%;
+      max-width: 400px;
+      padding: 8px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      border: 1.5px solid #b31e22;
+      font-size: 1rem;
+    }
+    canvas {
+      max-width: 600px;
+      height: 250px;
+      display: block;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Relatório Interativo das Cidades de Minas Gerais</h1>
+  <input 
+    type="text" 
+    id="searchInput" 
+    placeholder="Filtrar por município..." 
+    aria-label="Filtrar lista de municípios">
+  <table aria-label="Tabela de pontuação das cidades" id="citiesTable">
+    <thead>
+      <tr>
+        <th>Posição</th>
+        <th>Município</th>
+        <th>Pontuação Final</th>
+        <th>QI A (Inventário)</th>
+        <th>QI B (Investimentos)</th>
+        <th>QII A (Tombamento)</th>
+        <th>Outros Critérios</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <h2>Distribuição de Pontuação</h2>
+  <canvas id="barChart" aria-label="Gráfico de barras da pontuação dos municípios" role="img"></canvas>
+
+  <h2>Composição da Pontuação Média</h2>
+  <canvas id="pieChart" aria-label="Gráfico de pizza da composição das pontuações" role="img"></canvas>
+
+  <script>
+    const data = [
+      { municipio: "Mariana", posicao: 1, pontuacaoFinal: 67.8, qiA: 3.8, qiB: 53.0, qiiA: 5.0, outros: 6.0 },
+      { municipio: "Ouro Preto", posicao: 2, pontuacaoFinal: 48.0, qiA: 4.0, qiB: 16.0, qiiA: 5.0, outros: 23.0 },
+      { municipio: "São João del Rei", posicao: 3, pontuacaoFinal: 38.47, qiA: 3.6, qiB: 25.0, qiiA: 12.0, outros: -2.13 },
+      { municipio: "Catas Altas", posicao: 4, pontuacaoFinal: 36.7, qiA: 3.7, qiB: 23.0, qiiA: 5.0, outros: 5.0 },
+      { municipio: "Sabará", posicao: 5, pontuacaoFinal: 31.8, qiA: 3.8, qiB: 17.0, qiiA: 6.0, outros: 5.0 },
+      { municipio: "Tiradentes", posicao: 6, pontuacaoFinal: 32.49, qiA: 3.5, qiB: 19.0, qiiA: 8.0, outros: 2.0 },
+      { municipio: "Santa Bárbara", posicao: 7, pontuacaoFinal: 44.47, qiA: 3.8, qiB: 29.67, qiiA: 10.67, outros: 0.43 },
+      { municipio: "Serro", posicao: 8, pontuacaoFinal: 34.7, qiA: 3.7, qiB: 20.0, qiiA: 6.0, outros: 5.0 },
+      { municipio: "Sabará", posicao: 9, pontuacaoFinal: 31.8, qiA: 3.8, qiB: 17.0, qiiA: 6.0, outros: 5.0 },
+      { municipio: "Ipatinga", posicao: 10, pontuacaoFinal: 16.52, qiA: 3.7, qiB: 3.82, qiiA: 3.0, outros: 6.0 }
+    ];
+
+    // Popula tabela
+    const tbody = document.getElementById('tableBody');
+    data.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        `<td>${item.posicao}</td>` +
+        `<td>${item.municipio}</td>` +
+        `<td>${item.pontuacaoFinal.toFixed(2)}</td>` +
+        `<td>${item.qiA.toFixed(2)}</td>` +
+        `<td>${item.qiB.toFixed(2)}</td>` +
+        `<td>${item.qiiA.toFixed(2)}</td>` +
+        `<td>${item.outros.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Filtra tabela dinamicamente
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const filtro = this.value.toLowerCase();
+      Array.from(tbody.rows).forEach(row => {
+        const cidade = row.cells[1].textContent.toLowerCase();
+        row.style.display = cidade.includes(filtro) ? '' : 'none';
+      });
+    });
+
+    // Configurar gráficos do Chart.js
+    window.addEventListener('load', () => {
+      const ctxBar = document.getElementById('barChart');
+      ctxBar.width = 600;
+      ctxBar.height = 250;
+      new Chart(ctxBar.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.municipio),
+          datasets: [{
+            label: 'Pontuação Final',
+            data: data.map(d => d.pontuacaoFinal),
+            backgroundColor: 'rgba(179, 30, 34, 0.7)',
+            borderColor: 'rgba(179, 30, 34, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      const ctxPie = document.getElementById('pieChart');
+      ctxPie.width = 400;
+      ctxPie.height = 250;
+      const avgQI_A = data.reduce((a, d) => a + d.qiA, 0) / data.length;
+      const avgQI_B = data.reduce((a, d) => a + d.qiB, 0) / data.length;
+      const avgQII_A = data.reduce((a, d) => a + d.qiiA, 0) / data.length;
+      const avgOutros = data.reduce((a, d) => a + d.outros, 0) / data.length;
+      new Chart(ctxPie.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['Inventário (QI A)', 'Investimentos (QI B)', 'Tombamento (QII A)', 'Outros Critérios'],
+          datasets: [{
+            data: [avgQI_A, avgQI_B, avgQII_A, avgOutros],
+            backgroundColor: ['#b31e22', '#f2a900', '#7a392f', '#d99d34']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    });
+  </script>
+</body>
+</html>
